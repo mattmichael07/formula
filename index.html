@@ -335,33 +335,7 @@
         </div>
       </div>
 
-      <!-- AI Coach -->
-      <div class="slabel">AI NUTRITION COACH</div>
-      <div style="background:linear-gradient(135deg,#0A0F1A,#080808);border:1px solid var(--blue);border-radius:16px;overflow:hidden;margin-bottom:8px">
-        <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
-          <div style="width:8px;height:8px;border-radius:50%;background:var(--blue);box-shadow:0 0 8px var(--blue)"></div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:3px;color:var(--blue)">FORMULA AI · NUTRITION</div>
-        </div>
-        <div id="chat-messages" style="padding:16px;min-height:200px;max-height:380px;overflow-y:auto;display:flex;flex-direction:column;gap:10px">
-          <div style="background:var(--bg3);border-radius:12px 12px 12px 4px;padding:12px 14px;max-width:85%;align-self:flex-start">
-            <div style="font-size:13px;color:var(--text2);line-height:1.5">Hey. I know your schedule — bar owner, up until 5am, eating fried food when you can. Ask me anything about your nutrition and I'll give you real answers that work for your life.</div>
-          </div>
-        </div>
-        <div style="padding:12px 14px;border-top:1px solid var(--border);display:flex;gap:8px">
-          <input id="chat-input" type="text" placeholder="Ask about food, protein, meals..." style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Barlow',sans-serif;font-size:13px;padding:10px 14px;outline:none" onkeydown="if(event.key==='Enter')sendChat()" />
-          <button onclick="sendChat()" style="background:var(--blue);border:none;border-radius:10px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;padding:10px 16px;cursor:pointer;white-space:nowrap">SEND</button>
-        </div>
-      </div>
 
-      <!-- Quick prompts -->
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px">
-        <button onclick="quickChat('I have back to back meetings all day and barely have time to eat. What is my best play to still hit protein today?')" style="background:var(--bg2);border:1px solid var(--border);border-radius:100px;color:var(--text2);font-family:'Barlow',sans-serif;font-size:11px;padding:6px 12px;cursor:pointer">Meetings all day</button>
-        <button onclick="quickChat('I ate fried food at Prima tonight and it is Friday. How do I recover this weekend without derailing the whole week?')" style="background:var(--bg2);border:1px solid var(--border);border-radius:100px;color:var(--text2);font-family:'Barlow',sans-serif;font-size:11px;padding:6px 12px;cursor:pointer">Ate fried food at Prima</button>
-        <button onclick="quickChat('I am stressed running multiple businesses and I know stress affects fat loss. What should I be eating to manage cortisol?')" style="background:var(--bg2);border:1px solid var(--border);border-radius:100px;color:var(--text2);font-family:'Barlow',sans-serif;font-size:11px;padding:6px 12px;cursor:pointer">Stress & cortisol</button>
-        <button onclick="quickChat('What is the fastest high protein meal I can make or grab when I only have 10 minutes between work and the gym?')" style="background:var(--bg2);border:1px solid var(--border);border-radius:100px;color:var(--text2);font-family:'Barlow',sans-serif;font-size:11px;padding:6px 12px;cursor:pointer">10 min pre-gym meal</button>
-        <button onclick="quickChat('It is a Push day today. Walk me through exactly what to eat before and after my workout.')" style="background:var(--bg2);border:1px solid var(--border);border-radius:100px;color:var(--text2);font-family:'Barlow',sans-serif;font-size:11px;padding:6px 12px;cursor:pointer">Push day nutrition</button>
-        <button onclick="quickChat('How do I hit 170g of protein on a day where I skipped breakfast and only have time for 2 meals?')" style="background:var(--bg2);border:1px solid var(--border);border-radius:100px;color:var(--text2);font-family:'Barlow',sans-serif;font-size:11px;padding:6px 12px;cursor:pointer">Skipped breakfast</button>
-      </div>
 
     </div>
   </div>
@@ -769,108 +743,6 @@ function rBody(){
   document.getElementById('body-stats').innerHTML=h;
 }
 
-// ── NUTRITION AI CHAT ─────────────────────────────────────────────────────────
-const SYSTEM_PROMPT = `You are the FORMULA nutrition coach for Matt — a 32 year old guy, 5'8", ~215 lbs, goal is to lose 15-20 lbs and recomp over 12 weeks. He lifts 3x per week (Push Mon, Pull Wed, Legs Sat).
-
-FULL CONTEXT — this is critical for relevant advice:
-- Tax attorney at Deloitte, specializing in R&D tax credits and global tax consulting
-- Co-owns Prima DC, a bar and event venue in Washington DC
-- Launching Earthie, a wellness cafe and sparkling matcha beverage company
-- Multiple businesses running simultaneously = extremely high stress and cognitive load
-- High cortisol from stress is a major driver of his lower body fat storage pattern
-
-DAILY SCHEDULE:
-- WEEKDAYS (Mon-Fri): Wakes 7-9am. Full Deloitte work day, meetings, client calls
-- WEEKENDS: Wakes 11am-1pm (sleeping in after Friday night at Prima)
-- Prima DC schedule: Closed Sun/Mon. Rarely Tue-Thu. Always Fri-Sat, arrives 8pm-midnight
-- Eats when he can — no consistent meal structure
-- Mostly eats fried food when at Prima on weekends
-- Saturday is LEGS day at the gym — waking up late means he needs a quick meal before lifting
-
-NUTRITION PROFILE:
-- Daily targets: 2200 calories, 170g protein, 180g carbs, 60g fat
-- Doesn't eat much pork
-- Sugar is a weakness but not daily
-- Doesn't drink much alcohol
-- Biggest challenges: no meal structure, fried food at the bar, eating late on Fri/Sat
-
-Your job: give short, direct, practical advice that fits his actual life — a high-performing professional running multiple businesses. No fluff. Max 3-4 sentences unless a full plan is requested. Talk like a smart friend who knows fitness AND understands the pressure of running businesses. When relevant, acknowledge the stress/cortisol connection. Always prioritize protein and meal timing around his schedule.`;
-
-let chatHistory = [];
-let chatLoading = false;
-
-function addMessage(text, role) {
-  const msgs = document.getElementById('chat-messages');
-  const isUser = role === 'user';
-  const div = document.createElement('div');
-  div.style.cssText = `background:${isUser ? 'var(--red)' : 'var(--bg3)'};border-radius:${isUser ? '12px 12px 4px 12px' : '12px 12px 12px 4px'};padding:12px 14px;max-width:85%;align-self:${isUser ? 'flex-end' : 'flex-start'}`;
-  div.innerHTML = `<div style="font-size:13px;color:${isUser ? '#fff' : 'var(--text2)'};line-height:1.5">${text}</div>`;
-  msgs.appendChild(div);
-  msgs.scrollTop = msgs.scrollHeight;
-  return div;
-}
-
-function addTyping() {
-  const msgs = document.getElementById('chat-messages');
-  const div = document.createElement('div');
-  div.id = 'typing-indicator';
-  div.style.cssText = 'background:var(--bg3);border-radius:12px 12px 12px 4px;padding:12px 14px;max-width:60%;align-self:flex-start';
-  div.innerHTML = '<div style="display:flex;gap:4px;align-items:center"><div style="width:6px;height:6px;border-radius:50%;background:var(--text3);animation:pulse 1s infinite"></div><div style="width:6px;height:6px;border-radius:50%;background:var(--text3);animation:pulse 1s infinite .2s"></div><div style="width:6px;height:6px;border-radius:50%;background:var(--text3);animation:pulse 1s infinite .4s"></div></div>';
-  msgs.appendChild(div);
-  msgs.scrollTop = msgs.scrollHeight;
-}
-
-function removeTyping() {
-  const t = document.getElementById('typing-indicator');
-  if (t) t.remove();
-}
-
-async function sendChat() {
-  if (chatLoading) return;
-  const input = document.getElementById('chat-input');
-  const text = input.value.trim();
-  if (!text) return;
-  input.value = '';
-  chatLoading = true;
-
-  addMessage(text, 'user');
-  chatHistory.push({ role: 'user', content: text });
-  addTyping();
-
-  try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 400,
-        system: SYSTEM_PROMPT,
-        messages: chatHistory
-      })
-    });
-    const data = await response.json();
-    const reply = data.content?.[0]?.text || 'Something went wrong. Try again.';
-    removeTyping();
-    addMessage(reply, 'assistant');
-    chatHistory.push({ role: 'assistant', content: reply });
-    if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
-  } catch (e) {
-    removeTyping();
-    addMessage('Connection error. Check your internet and try again.', 'assistant');
-  }
-  chatLoading = false;
-}
-
-function quickChat(msg) {
-  document.getElementById('chat-input').value = msg;
-  sendChat();
-  go('nutrition');
-}
-
-// Add pulse animation to head
-const style = document.createElement('style');
-style.textContent = '@keyframes pulse { 0%,100%{opacity:.3;transform:scale(.8)} 50%{opacity:1;transform:scale(1)} }';
-document.head.appendChild(style);
 
 load();updH();rToday();rBody();
 </script>
