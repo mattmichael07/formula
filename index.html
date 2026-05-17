@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>FORMULA</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { background: #0A0A0A; color: #F0F0F0; font-family: 'DM Mono', 'Courier New', monospace; min-height: 100vh; }
+    input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
+    .app { max-width: 480px; margin: 0 auto; padding-bottom: 90px; }
+    .header { background: #0A0A0A; border-bottom: 1px solid #171717; padding: 20px 20px 14px; position: sticky; top: 0; z-index: 100; }
+    .tabs { display: flex; border-bottom: 1px solid #141414; background: #0A0A0A; position: sticky; top: 96px; z-index: 99; }
+    .tab { flex: 1; padding: 12px 4px; background: none; border: none; border-bottom: 2px solid transparent; color: #3A3A3A; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 3px; cursor: pointer; transition: all 0.2s; }
+    .tab.active { border-bottom-color: #FF4D4D; color: #FF4D4D; }
+    .page { padding: 24px 20px; display: none; }
+    .page.active { display: block; }
+    .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1A1A1A; border: 1px solid #333; border-radius: 8px; padding: 10px 20px; font-size: 12px; color: #F0F0F0; z-index: 9999; box-shadow: 0 8px 32px rgba(0,0,0,.6); white-space: nowrap; display: none; }
+    .btn { width: 100%; padding: 16px; border: none; border-radius: 10px; font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 700; letter-spacing: 2px; cursor: pointer; }
+    .progress-bar-wrap { margin-top: 10px; height: 2px; background: #161616; border-radius: 1px; }
+    .progress-bar { height: 100%; background: linear-gradient(90deg, #FF4D4D, #FF8C00); border-radius: 1px; transition: width .6s ease; }
+    .card { background: #111; border: 1px solid #1A1A1A; border-radius: 12px; padding: 18px 20px; margin-bottom: 12px; }
+    .tag { font-size: 9px; padding: 2px 8px; border-radius: 4px; }
+    .set-row { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid #141414; transition: background 0.2s; }
+    .set-row:last-child { border-bottom: none; }
+    .set-check { width: 30px; height: 30px; border-radius: 6px; border: 2px solid #2A2A2A; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; color: #000; flex-shrink: 0; transition: all 0.15s; }
+    .set-input { width: 100%; background: #0A0A0A; border: 1px solid #222; border-radius: 6px; color: #F0F0F0; font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 700; padding: 7px 10px; outline: none; }
+    .week-btn { width: 28px; height: 28px; border-radius: 5px; background: #111; border: 1px solid #1E1E1E; color: #444; font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 700; cursor: pointer; }
+    .week-btn.active { background: #FF4D4D; border-color: #FF4D4D; color: #000; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div style="font-size:9px;letter-spacing:4px;color:#444;margin-bottom:3px">12-WEEK RECOMP · PROGRESSIVE OVERLOAD</div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-end">
+      <div>
+        <h1 style="font-size:24px;font-weight:700;letter-spacing:-1px">FOR<span style="color:#FF4D4D">MULA</span></h1>
+        <div id="header-sub" style="font-size:9px;color:#444;margin-top:2px;letter-spacing:2px">LOADING...</div>
+      </div>
+      <div style="text-align:right">
+        <div id="header-pct" style="font-size:24px;font-weight:700;color:#FF4D4D;line-height:1">0%</div>
+        <div id="header-count" style="font-size:9px;color:#444">0/36 sessions</div>
+      </div>
+    </div>
+    <div class="progress-bar-wrap"><div class="progress-bar" id="main-progress" style="width:0%"></div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('today')">TODAY</button>
+    <button class="tab" onclick="showTab('workout')">WORKOUT</button>
+    <button class="tab" onclick="showTab('tracker')">TRACKER</button>
+    <button class="tab" onclick="showTab('body')">BODY</button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- TODAY -->
+  <div class="page active" id="page-today">
+    <div id="today-date" style="font-size:9px;color:#444;letter-spacing:3px;margin-bottom:4px"></div>
+    <div id="today-title" style="font-size:22px;font-weight:700;margin-bottom:20px"></div>
+    <div id="today-content"></div>
+    <div id="recent-sessions" style="margin-top:28px"></div>
+  </div>
+
+  <!-- WORKOUT -->
+  <div class="page" id="page-workout">
+    <div id="workout-content"></div>
+  </div>
+
+  <!-- TRACKER -->
+  <div class="page" id="page-tracker">
+    <div style="font-size:9px;letter-spacing:3px;color:#444;margin-bottom:20px">12-WEEK GRID</div>
+    <div id="tracker-grid"></div>
+  </div>
+
+  <!-- BODY -->
+  <div class="page" id="page-body">
+    <div style="font-size:9px;letter-spacing:3px;color:#444;margin-bottom:20px">BODY WEIGHT LOG</div>
+    <div class="card">
+      <div style="font-size:9px;color:#444;letter-spacing:3px;margin-bottom:14px">LOG TODAY</div>
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
+        <input type="number" id="bw-input" placeholder="215" style="flex:1;background:#0A0A0A;border:1px solid #222;border-radius:6px;color:#F0F0F0;font-family:'DM Mono',monospace;font-size:20px;font-weight:700;padding:12px 14px;outline:none" />
+        <div style="font-size:13px;color:#444;font-weight:600">LBS</div>
+      </div>
+      <input type="text" id="bw-note" placeholder="Notes (optional)..." style="width:100%;background:#0A0A0A;border:1px solid #1A1A1A;border-radius:6px;color:#888;font-family:'DM Mono',monospace;font-size:11px;padding:10px 12px;outline:none;margin-bottom:12px" />
+      <button class="btn" onclick="logBodyWeight()" style="background:#FF4D4D;color:#000;font-size:11px">LOG WEIGHT</button>
+    </div>
+    <div id="body-stats"></div>
+    <div style="margin-top:28px;background:#FF4D4D0D;border:1px solid #FF4D4D20;border-radius:12px;padding:16px">
+      <div style="font-size:9px;color:#FF4D4D;letter-spacing:3px;margin-bottom:8px">12-WEEK TARGETS</div>
+      <div style="font-size:12px;color:#888;line-height:1.9">
+        Fat loss: <strong style="color:#F0F0F0">–15 to –20 lbs</strong><br>
+        Bench: <strong style="color:#F0F0F0">175 lbs</strong> by Week 12<br>
+        Visible change by <strong style="color:#F0F0F0">Week 6</strong><br>
+        <span style="font-size:10px;color:#444">Muscle memory is on your side.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+const STORAGE_KEY = 'formula-matt-v1';
+
+function prog(start, end, weeks=12) {
+  return Array.from({length:weeks},(_,i)=>{
+    const raw = start + ((end-start)*i)/(weeks-1);
+    return Math.round(raw/2.5)*2.5;
+  });
+}
+
+const WARMUPS = {
+  push: { title:'Push Day Warmup', duration:'5–7 min', color:'#FF4D4D', moves:[
+    {name:'Arm Circles', detail:'30 sec each direction', yt:'arm circles warmup exercise'},
+    {name:'Band Pull-Aparts', detail:'2 × 15 reps', yt:'band pull apart warmup shoulders'},
+    {name:'Wall Slides', detail:'2 × 10 reps — opens chest', yt:'wall slides shoulder warmup'},
+    {name:'Light DB Lateral Raise', detail:'1 × 15 — 5–10 lbs only', yt:'light lateral raise warmup'},
+    {name:'Warmup Set on Bench', detail:'1 × 10 at 50% working weight', yt:'bench press warmup set'},
+  ]},
+  pull: { title:'Pull Day Warmup', duration:'5–7 min', color:'#4D8BFF', moves:[
+    {name:'Cat-Cow Stretch', detail:'30 sec — loosens spine', yt:'cat cow stretch warmup'},
+    {name:'Dead Hang', detail:'2 × 20 sec on pull-up bar', yt:'dead hang lat stretch warmup'},
+    {name:'Band Pull-Aparts', detail:'2 × 15 reps — rear delts', yt:'band pull apart warmup shoulders'},
+    {name:'Scapular Retractions', detail:'2 × 10 reps — activate lats', yt:'scapular retraction exercise warmup'},
+    {name:'Light Lat Pulldown', detail:'1 × 15 at 50% working weight', yt:'lat pulldown warmup set'},
+  ]},
+  legs: { title:'Legs Day Warmup', duration:'7–10 min', color:'#00C896', moves:[
+    {name:'Hip Circles', detail:'30 sec each direction', yt:'hip circles warmup exercise'},
+    {name:'Bodyweight Squat', detail:'2 × 15 — slow and deep', yt:'bodyweight squat warmup'},
+    {name:'Walking Hip Flexor Stretch', detail:'10 each leg', yt:'walking hip flexor stretch warmup'},
+    {name:'Glute Bridge', detail:'2 × 15 — activate glutes', yt:'glute bridge activation warmup'},
+    {name:'Leg Swings', detail:'10 each leg, front-back + side-side', yt:'leg swings dynamic warmup'},
+    {name:'Light Goblet Squat', detail:'1 × 10 at 50% working weight', yt:'goblet squat warmup set'},
+  ]},
+};
+
+const PROGRAM = [
+  { id:'push', label:'DAY 1', title:'PUSH', subtitle:'Chest · Shoulders · Triceps', color:'#FF4D4D',
+    cardio:'15 min incline walk — 3.5 mph, 8–10% incline',
+    exercises:[
+      { name:'Bench Press', sets:4, reps:'8–10', variant:true, variants:{
+        barbell:{label:'Barbell', yt:'Barbell bench press proper form tutorial', weights:prog(135,175), unit:'lbs', note:'Total bar weight'},
+        dumbbell:{label:'Dumbbell', yt:'Dumbbell bench press proper form tutorial', weights:prog(55,75), unit:'lbs/hand', note:'Each hand'},
+      }},
+      {name:'Incline DB Press', sets:3, reps:'10–12', note:'Each hand', yt:'Incline dumbbell press proper form', weights:prog(35,55), unit:'lbs/hand'},
+      {name:'Seated DB Shoulder Press', sets:3, reps:'10–12', note:'Each hand', yt:'Seated dumbbell shoulder press form tutorial', weights:prog(37.5,52.5), unit:'lbs/hand'},
+      {name:'Lateral Raises', sets:3, reps:'12–15', note:'Light & slow', yt:'Lateral raise proper form tutorial', weights:prog(10,20), unit:'lbs/hand'},
+      {name:'Tricep Pushdowns (cable)', sets:3, reps:'12–15', note:'Cable machine', yt:'Cable tricep pushdown proper form', weights:prog(30,55), unit:'lbs'},
+      {name:'Overhead Tricep Extension', sets:2, reps:'12', note:'25lb plate or DB', yt:'Overhead tricep extension form tutorial', weights:prog(25,42.5), unit:'lbs'},
+    ]
+  },
+  { id:'pull', label:'DAY 2', title:'PULL', subtitle:'Back · Biceps + Cardio', color:'#4D8BFF',
+    cardio:'20–25 min — 3.8 mph, 10% incline OR 1 min jog / 2 min walk × 8',
+    exercises:[
+      {name:'Lat Pulldown', sets:4, reps:'10–12', note:'Full stretch at top', yt:'Lat pulldown proper form tutorial', weights:prog(80,125), unit:'lbs'},
+      {name:'Seated Cable Row', sets:3, reps:'10–12', note:'Squeeze hard', yt:'Seated cable row proper form tutorial', weights:prog(70,110), unit:'lbs'},
+      {name:'DB Single-Arm Row', sets:3, reps:'10 each', note:'Each side', yt:'Dumbbell single arm row proper form', weights:prog(35,55), unit:'lbs/hand'},
+      {name:'Face Pulls', sets:3, reps:'15', note:'Posture + rear delt', yt:'Cable face pull proper form tutorial', weights:prog(20,40), unit:'lbs'},
+      {name:'DB Curl', sets:3, reps:'12', note:'Each hand', yt:'Dumbbell bicep curl proper form tutorial', weights:prog(22.5,32.5), unit:'lbs/hand'},
+      {name:'Hammer Curl', sets:2, reps:'12', note:'Each hand', yt:'Hammer curl proper form tutorial', weights:prog(25,37.5), unit:'lbs/hand'},
+    ]
+  },
+  { id:'legs', label:'DAY 3', title:'LEGS', subtitle:'Legs · Core — Most Important Day', color:'#00C896',
+    cardio:null,
+    exercises:[
+      {name:'Goblet Squat', sets:4, reps:'12', note:'DB at chest', yt:'Goblet squat proper form tutorial', weights:prog(25,50), unit:'lbs'},
+      {name:'Romanian Deadlift (RDL)', sets:4, reps:'10–12', note:'Hip hinge, soft knees', yt:'Romanian deadlift RDL proper form tutorial', weights:prog(60,115), unit:'lbs'},
+      {name:'Leg Press (machine)', sets:3, reps:'15', note:'Full range of motion', yt:'Leg press machine proper form tutorial', weights:prog(90,180), unit:'lbs'},
+      {name:'Lying Leg Curl', sets:3, reps:'12', note:'Slow on the way down', yt:'Lying leg curl machine proper form', weights:prog(40,75), unit:'lbs'},
+      {name:'Hip Abductor Machine', sets:3, reps:'15–20', note:'Outer thigh/knee area', yt:'Hip abductor machine proper form tutorial', weights:prog(50,100), unit:'lbs'},
+      {name:'Walking Lunges', sets:3, reps:'10 each', note:'BW → add DBs over time', yt:'Walking lunges proper form tutorial', weights:prog(0,25), unit:'lbs/hand'},
+      {name:'Plank', sets:3, reps:'45 sec', note:'+5 sec every 2 weeks', yt:'Plank proper form tutorial core', weights:null, unit:null},
+      {name:'Dead Bug', sets:3, reps:'10 each', note:'Core stability', yt:'Dead bug exercise proper form tutorial', weights:null, unit:null},
+      {name:'Standing Oblique Crunch', sets:3, reps:'15 each', note:'Love handles', yt:'Standing oblique crunch proper form', weights:prog(10,25), unit:'lbs'},
+    ]
+  },
+];
+
+const TOTAL_WEEKS = 12;
+const DAY_MAP = {1:'push', 3:'pull', 6:'legs'};
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let state = { currentWeek:1, startDate:today(), sessions:{}, bodyLog:[] };
+let workoutPhase = null; // null | 'warmup' | 'workout'
+let activeDayId = null;
+let setLogs = {};
+let completedSets = {};
+let variantSelections = {};
+let activeTab = 'today';
+
+function today() { return new Date().toISOString().split('T')[0]; }
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) state = JSON.parse(raw);
+  } catch(e) { console.error('Load error', e); }
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch(e) { console.error('Save error', e); }
+}
+
+function sKey(w, d) { return `${w}-${d}`; }
+
+function getRec(ex, week, vKey) {
+  if (ex.variant) return ex.variants[vKey||'barbell']?.weights?.[Math.min(week-1,11)] ?? null;
+  return ex.weights ? ex.weights[Math.min(week-1,11)] : null;
+}
+function getUnit(ex, vKey) { return ex.variant ? (ex.variants[vKey||'barbell']?.unit??'') : (ex.unit??''); }
+function getYT(ex, vKey) { return ex.variant ? (ex.variants[vKey||'barbell']?.yt??'') : (ex.yt??''); }
+function getNote(ex, vKey) { return ex.variant ? (ex.variants[vKey||'barbell']?.note??'') : (ex.note??''); }
+function fmtDate(iso) { if(!iso) return ''; return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
+function fmtDateFull(iso) { if(!iso) return ''; return new Date(iso).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}); }
+function openYT(q) { window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(q)}`,'_blank'); }
+
+function totalDone() { return Object.keys(state.sessions).length; }
+function progress() { return Math.round((totalDone()/(TOTAL_WEEKS*3))*100); }
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+function showToast(msg, duration=2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  setTimeout(()=>{ t.style.display='none'; }, duration);
+}
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+function showTab(id) {
+  activeTab = id;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t=>{ if(t.textContent===id.toUpperCase()) t.classList.add('active'); });
+  if(id==='today') renderToday();
+  if(id==='workout') renderWorkout();
+  if(id==='tracker') renderTracker();
+  if(id==='body') renderBody();
+  updateHeader();
+}
+
+// ── HEADER ────────────────────────────────────────────────────────────────────
+function updateHeader() {
+  document.getElementById('header-sub').textContent = `WK ${state.currentWeek}/${TOTAL_WEEKS} · STARTED ${fmtDate(state.startDate)}`;
+  document.getElementById('header-pct').textContent = progress()+'%';
+  document.getElementById('header-count').textContent = `${totalDone()}/36 sessions`;
+  document.getElementById('main-progress').style.width = progress()+'%';
+}
+
+// ── TODAY ─────────────────────────────────────────────────────────────────────
+function renderToday() {
+  const dow = new Date().getDay();
+  const sugId = DAY_MAP[dow];
+  const dayInfo = PROGRAM.find(d=>d.id===sugId);
+
+  document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}).toUpperCase();
+  document.getElementById('today-title').textContent = sugId ? `TIME TO ${sugId.toUpperCase()}` : 'ACTIVE REST DAY';
+
+  let html = '';
+  if (dayInfo) {
+    const done = state.sessions[sKey(state.currentWeek, dayInfo.id)];
+    html = `
+      <div style="background:${dayInfo.color}12;border:1px solid ${dayInfo.color}30;border-left:3px solid ${dayInfo.color};border-radius:12px;padding:18px 20px;margin-bottom:14px">
+        <div style="font-size:9px;color:${dayInfo.color};letter-spacing:3px;margin-bottom:4px">${dayInfo.label} · WEEK ${state.currentWeek}</div>
+        <div style="font-size:24px;font-weight:700">${dayInfo.title}</div>
+        <div style="font-size:10px;color:#555;margin-top:2px">${dayInfo.subtitle}</div>
+        <div style="font-size:10px;color:#444;margin-top:10px">${dayInfo.exercises.length} exercises · starts with warmup</div>
+      </div>
+      <button class="btn" onclick="startDay('${dayInfo.id}')" style="background:${dayInfo.color};color:#000;margin-bottom:10px">START WORKOUT →</button>
+      ${done ? `<div style="background:#0D1A14;border:1px solid #00C89630;border-radius:10px;padding:12px 16px;text-align:center"><div style="font-size:10px;color:#00C896">✓ COMPLETED</div><div style="font-size:9px;color:#444;margin-top:3px">${fmtDateFull(done.completedAt)}</div></div>` : ''}
+    `;
+  } else {
+    html = `<div class="card"><div style="font-size:14px;font-weight:600;margin-bottom:8px">Active Rest Day</div><div style="font-size:11px;color:#555;line-height:1.7">30 min incline walk — 3.5 mph, 8–10%<br><span style="color:#444">On a call counts. Secret weapon.</span></div></div>`;
+  }
+  document.getElementById('today-content').innerHTML = html;
+
+  // Recent sessions
+  const entries = Object.entries(state.sessions).sort((a,b)=>new Date(b[1].completedAt)-new Date(a[1].completedAt)).slice(0,5);
+  if (entries.length > 0) {
+    let rhtml = '<div style="font-size:9px;letter-spacing:3px;color:#444;margin-bottom:12px">RECENT SESSIONS</div>';
+    entries.forEach(([key, session]) => {
+      const [week, dayId] = key.split('-');
+      const di = PROGRAM.find(d=>d.id===dayId);
+      if (!di) return;
+      rhtml += `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #141414">
+        <div style="display:flex;gap:12px;align-items:center">
+          <div style="width:8px;height:8px;border-radius:50%;background:${di.color};flex-shrink:0"></div>
+          <div><div style="font-size:12px;font-weight:600">${di.title}</div><div style="font-size:9px;color:#444;margin-top:2px">Week ${week}</div></div>
+        </div>
+        <div style="font-size:10px;color:#444">${fmtDate(session.completedAt)}</div>
+      </div>`;
+    });
+    document.getElementById('recent-sessions').innerHTML = rhtml;
+  } else {
+    document.getElementById('recent-sessions').innerHTML = '';
+  }
+}
+
+// ── WORKOUT ───────────────────────────────────────────────────────────────────
+function startDay(dayId) {
+  activeDayId = dayId;
+  workoutPhase = 'warmup';
+  setLogs = {}; completedSets = {}; variantSelections = {};
+  showTab('workout');
+}
+
+function renderWorkout() {
+  const el = document.getElementById('workout-content');
+  if (!activeDayId || !workoutPhase) { renderWorkoutPicker(); return; }
+  if (workoutPhase === 'warmup') { renderWarmup(); return; }
+  if (workoutPhase === 'workout') { renderLifting(); return; }
+}
+
+function renderWorkoutPicker() {
+  let html = '<div style="font-size:9px;letter-spacing:3px;color:#444;margin-bottom:16px">SELECT A WORKOUT</div>';
+  PROGRAM.forEach(d => {
+    html += `<div onclick="startDay('${d.id}')" style="background:#111;border:1px solid ${d.color}30;border-left:3px solid ${d.color};border-radius:12px;padding:18px 20px;margin-bottom:12px;cursor:pointer">
+      <div style="font-size:9px;color:${d.color};letter-spacing:3px;margin-bottom:4px">${d.label}</div>
+      <div style="font-size:20px;font-weight:700">${d.title}</div>
+      <div style="font-size:10px;color:#555;margin-top:2px">${d.subtitle}</div>
+      <div style="font-size:9px;color:${d.color};margin-top:10px;letter-spacing:1px">TAP TO START →</div>
+    </div>`;
+  });
+  document.getElementById('workout-content').innerHTML = html;
+}
+
+function renderWarmup() {
+  const wu = WARMUPS[activeDayId];
+  let html = `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+      <button onclick="activeDayId=null;workoutPhase=null;renderWorkout()" style="background:none;border:none;color:#444;font-size:20px;cursor:pointer;padding:0;line-height:1">←</button>
+      <div>
+        <div style="font-size:9px;color:${wu.color};letter-spacing:3px">BEFORE YOU LIFT</div>
+        <div style="font-size:20px;font-weight:700">${wu.title}</div>
+        <div style="font-size:10px;color:#555;margin-top:2px">${wu.duration} · do not skip</div>
+      </div>
+    </div>`;
+  wu.moves.forEach(move => {
+    html += `<div class="card" style="margin-bottom:8px;padding:14px 16px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600;margin-bottom:4px">${move.name}</div>
+          <div style="font-size:10px;color:#555">${move.detail}</div>
+        </div>
+        <button onclick="openYT('${move.yt}')" style="display:flex;align-items:center;gap:4px;background:#150A0A;border:1px solid #FF000035;border-radius:6px;padding:5px 10px;cursor:pointer;font-family:'DM Mono',monospace;font-size:9px;color:#FF4444;letter-spacing:1px;white-space:nowrap;flex-shrink:0">▶ HOW TO</button>
+      </div>
+    </div>`;
+  });
+  html += `<button class="btn" onclick="workoutPhase='workout';renderWorkout()" style="background:${wu.color};color:#000;margin-top:16px">WARMUP DONE — START LIFTING →</button>`;
+  document.getElementById('workout-content').innerHTML = html;
+}
+
+function renderLifting() {
+  const day = PROGRAM.find(d=>d.id===activeDayId);
+  const key = sKey(state.currentWeek, activeDayId);
+  const sessionDone = !!state.sessions[key];
+  const totalSets = day.exercises.reduce((a,ex)=>a+ex.sets,0);
+  const doneSets = Object.values(completedSets).filter(Boolean).length;
+  const pct = totalSets > 0 ? Math.round((doneSets/totalSets)*100) : 0;
+
+  let html = `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <button onclick="workoutPhase='warmup';renderWorkout()" style="background:none;border:none;color:#444;font-size:20px;cursor:pointer;padding:0;line-height:1">←</button>
+      <div style="flex:1">
+        <div style="font-size:9px;color:${day.color};letter-spacing:3px">${day.label} · WEEK ${state.currentWeek}</div>
+        <div style="font-size:20px;font-weight:700">${day.title}</div>
+      </div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+        <span style="font-size:9px;color:#444;letter-spacing:2px">SETS DONE</span>
+        <span style="font-size:9px;color:${day.color}">${doneSets}/${totalSets}</span>
+      </div>
+      <div style="height:3px;background:#161616;border-radius:2px">
+        <div style="height:100%;width:${pct}%;background:${day.color};border-radius:2px;transition:width .3s ease"></div>
+      </div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:9px;color:#444;letter-spacing:3px;margin-bottom:8px">WEEK</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap">`;
+  for(let w=1;w<=TOTAL_WEEKS;w++) {
+    html += `<button class="week-btn${state.currentWeek===w?' active':''}" onclick="setWeek(${w})">${w}</button>`;
+  }
+  html += `</div></div>`;
+
+  day.exercises.forEach((ex, exIdx) => {
+    const vKey = variantSelections[exIdx] || (ex.variant ? 'barbell' : null);
+    const rec = getRec(ex, state.currentWeek, vKey);
+    const nextRec = state.currentWeek < 12 ? getRec(ex, state.currentWeek+1, vKey) : null;
+    const unit = getUnit(ex, vKey);
+    const note = getNote(ex, vKey);
+    const allDone = Array.from({length:ex.sets},(_,si)=>completedSets[`${exIdx}-${si}`]).every(Boolean);
+
+    html += `<div style="background:${allDone?day.color+'0C':'#111'};border:1px solid ${allDone?day.color+'40':'#1A1A1A'};border-radius:12px;margin-bottom:10px;overflow:hidden;transition:all 0.2s">
+      <div style="padding:14px 16px 10px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:700;color:${allDone?'#555':'#F0F0F0'}">${ex.name}</div>
+            <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap;align-items:center">
+              <span class="tag" style="color:${day.color};background:${day.color}18">${ex.sets} sets</span>
+              <span class="tag" style="color:${day.color};background:${day.color}18">${ex.reps} reps</span>
+              ${note?`<span style="font-size:9px;color:#444">${note}</span>`:''}
+            </div>
+          </div>
+          <button onclick="openYT('${getYT(ex,vKey)}')" style="display:flex;align-items:center;gap:4px;background:#150A0A;border:1px solid #FF000035;border-radius:6px;padding:5px 9px;cursor:pointer;font-family:'DM Mono',monospace;font-size:8px;color:#FF4444;letter-spacing:1px;white-space:nowrap;flex-shrink:0">▶ HOW TO</button>
+        </div>`;
+
+    if (ex.variant) {
+      html += `<div style="display:flex;gap:6px;margin-top:10px">`;
+      Object.entries(ex.variants).forEach(([vk, vdata]) => {
+        const isActive = vKey === vk;
+        html += `<button onclick="variantSelections[${exIdx}]='${vk}';renderLifting()" style="flex:1;padding:7px 4px;background:${isActive?day.color:'#0A0A0A'};border:1px solid ${isActive?day.color:'#222'};border-radius:6px;color:${isActive?'#000':'#555'};font-family:'DM Mono',monospace;font-size:9px;font-weight:700;letter-spacing:2px;cursor:pointer">${vdata.label.toUpperCase()}</button>`;
+      });
+      html += `</div>`;
+    }
+
+    if (rec !== null) {
+      html += `<div style="display:flex;gap:10px;margin-top:10px;align-items:center">
+        <div style="background:#0A0A0A;border:1px solid ${day.color}30;border-radius:6px;padding:5px 12px">
+          <div style="font-size:8px;color:#444;letter-spacing:2px;margin-bottom:2px">TARGET WK ${state.currentWeek}</div>
+          <div style="font-size:16px;font-weight:700;color:${day.color}">${rec} <span style="font-size:9px;color:#555">${unit}</span></div>
+        </div>
+        ${nextRec&&nextRec!==rec?`<div style="font-size:9px;color:#333">WK${state.currentWeek+1}: ${nextRec} ${unit} ↑</div>`:''}
+      </div>`;
+    }
+
+    html += `</div><div style="border-top:1px solid #161616">`;
+    for(let si=0;si<ex.sets;si++) {
+      const setKey = `${exIdx}-${si}`;
+      const isDone = !!completedSets[setKey];
+      const val = setLogs[setKey]||'';
+      html += `<div class="set-row" style="background:${isDone?day.color+'08':'transparent'}">
+        <div style="font-size:10px;color:${isDone?day.color:'#444'};font-weight:700;min-width:36px">SET ${si+1}</div>
+        <div style="flex:1;display:flex;align-items:center;gap:6px">
+          <input type="number" class="set-input" style="border-color:${isDone?day.color+'60':'#222'}" placeholder="${rec!==null?rec:'—'}" value="${val}" oninput="setLogs['${setKey}']=this.value" />
+          ${unit?`<span style="font-size:9px;color:#444;white-space:nowrap">${unit}</span>`:''}
+        </div>
+        <div class="set-check" onclick="toggleSet('${setKey}','${day.color}')" style="border-color:${isDone?day.color:'#2A2A2A'};background:${isDone?day.color:'transparent'}" id="check-${setKey}">${isDone?'✓':''}</div>
+      </div>`;
+    }
+    html += `</div></div>`;
+  });
+
+  if (day.cardio) {
+    html += `<div style="background:#0A1A14;border:1px solid #00C89625;border-radius:10px;padding:14px 16px;margin-top:4px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+        <div>
+          <div style="font-size:9px;color:#00C896;letter-spacing:3px;margin-bottom:5px">CARDIO FINISHER</div>
+          <div style="font-size:11px;color:#888;line-height:1.6">${day.cardio}</div>
+        </div>
+        <button onclick="openYT('incline treadmill walk fat loss')" style="background:#0A1A0A;border:1px solid #00C89640;border-radius:6px;padding:6px 10px;cursor:pointer;font-family:'DM Mono',monospace;font-size:9px;color:#00C896;letter-spacing:1px;white-space:nowrap;flex-shrink:0">▶ HOW TO</button>
+      </div>
+    </div>`;
+  }
+
+  html += `<button class="btn" onclick="finishSession()" style="background:${sessionDone?'#1A1A1A':day.color};border:1px solid ${sessionDone?'#333':day.color};color:${sessionDone?'#555':'#000'};margin-top:8px">
+    ${sessionDone?'✓ LOGGED — TAP TO UNDO':'FINISH & SAVE SESSION ✓'}
+  </button>`;
+
+  document.getElementById('workout-content').innerHTML = html;
+}
+
+function toggleSet(setKey, color) {
+  completedSets[setKey] = !completedSets[setKey];
+  const el = document.getElementById('check-'+setKey);
+  if (el) {
+    el.textContent = completedSets[setKey] ? '✓' : '';
+    el.style.background = completedSets[setKey] ? color : 'transparent';
+    el.style.borderColor = completedSets[setKey] ? color : '#2A2A2A';
+    el.parentElement.style.background = completedSets[setKey] ? color+'08' : 'transparent';
+  }
+  // update progress bar
+  const day = PROGRAM.find(d=>d.id===activeDayId);
+  if (day) {
+    const totalSets = day.exercises.reduce((a,ex)=>a+ex.sets,0);
+    const doneSets = Object.values(completedSets).filter(Boolean).length;
+    const pct = totalSets > 0 ? Math.round((doneSets/totalSets)*100) : 0;
+    const bar = document.querySelector('#page-workout [style*="background:'+day.color+';border-radius:2px"]');
+    if (bar) bar.style.width = pct+'%';
+    const countEl = document.querySelector('#page-workout [style*="letter-spacing:2px"] + span');
+  }
+}
+
+function setWeek(w) {
+  state.currentWeek = w;
+  saveState();
+  updateHeader();
+  renderLifting();
+}
+
+function finishSession() {
+  const key = sKey(state.currentWeek, activeDayId);
+  if (state.sessions[key]) {
+    delete state.sessions[key];
+    saveState();
+    showToast('Session removed');
+    renderLifting();
+  } else {
+    state.sessions[key] = { completedAt: new Date().toISOString(), setLogs: {...setLogs} };
+    saveState();
+    showToast('Session saved! 💪', 3000);
+    updateHeader();
+    setTimeout(() => {
+      workoutPhase = null;
+      activeDayId = null;
+      showTab('today');
+    }, 1200);
+  }
+}
+
+// ── TRACKER ───────────────────────────────────────────────────────────────────
+function renderTracker() {
+  let html = '';
+  for(let week=1;week<=TOTAL_WEEKS;week++) {
+    const ws = PROGRAM.map(d=>({...d, done:state.sessions[sKey(week,d.id)]}));
+    const wc = ws.filter(s=>s.done).length;
+    html += `<div style="margin-bottom:10px;background:#0E0E0E;border:1px solid ${state.currentWeek===week?'#FF4D4D30':'#141414'};border-radius:10px;padding:14px 16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="font-size:11px;font-weight:700;color:${state.currentWeek===week?'#FF4D4D':'#555'}">WK ${week}</div>
+          ${state.currentWeek===week?'<div style="font-size:8px;color:#FF4D4D;background:#FF4D4D15;padding:2px 6px;border-radius:4px;letter-spacing:2px">CURRENT</div>':''}
+        </div>
+        <div style="font-size:10px;color:${wc===3?'#00C896':'#444'}">${wc}/3</div>
+      </div>
+      <div style="display:flex;gap:8px">`;
+    ws.forEach(s=>{
+      html+=`<div style="flex:1;background:${s.done?s.color+'20':'#141414'};border:1px solid ${s.done?s.color+'50':'#1A1A1A'};border-radius:6px;padding:8px 4px;text-align:center">
+        <div style="font-size:9px;color:${s.done?s.color:'#333'};font-weight:700">${s.done?'✓':'·'}</div>
+        <div style="font-size:8px;color:${s.done?s.color:'#2A2A2A'};margin-top:3px;letter-spacing:1px">${s.title}</div>
+        ${s.done?`<div style="font-size:7px;color:#444;margin-top:2px">${fmtDate(s.done.completedAt)}</div>`:''}
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+  document.getElementById('tracker-grid').innerHTML = html;
+}
+
+// ── BODY ──────────────────────────────────────────────────────────────────────
+function logBodyWeight() {
+  const bw = document.getElementById('bw-input').value;
+  const note = document.getElementById('bw-note').value;
+  if (!bw) return;
+  state.bodyLog = [{ date:today(), weight:bw, notes:note }, ...(state.bodyLog||[])].slice(0,50);
+  saveState();
+  document.getElementById('bw-input').value='';
+  document.getElementById('bw-note').value='';
+  showToast('Weight logged!');
+  renderBody();
+}
+
+function renderBody() {
+  const log = state.bodyLog || [];
+  if (log.length === 0) {
+    document.getElementById('body-stats').innerHTML = '<div style="text-align:center;color:#2A2A2A;padding:40px 0;font-size:11px;letter-spacing:2px">LOG YOUR FIRST WEIGHT ABOVE</div>';
+    return;
+  }
+  const latest = parseFloat(log[0].weight);
+  const start = 217;
+  const totalLost = (start - latest).toFixed(1);
+  const change = log.length > 1 ? (latest - parseFloat(log[log.length-1].weight)).toFixed(1) : '0';
+
+  let html = `<div style="display:flex;gap:10px;margin-bottom:20px">`;
+  [['CURRENT',`${latest} lbs`,'#F0F0F0'],['CHANGE',`${parseFloat(change)>0?'+':''}${change}`,parseFloat(change)<0?'#00C896':'#FF4D4D'],['FROM START',`${totalLost>0?'-':'+'}${Math.abs(totalLost)}`,totalLost>0?'#00C896':'#FF4D4D']].forEach(([label,val,color])=>{
+    html+=`<div style="flex:1;background:#111;border:1px solid #1A1A1A;border-radius:10px;padding:14px 10px;text-align:center">
+      <div style="font-size:15px;font-weight:700;color:${color}">${val}</div>
+      <div style="font-size:8px;color:#444;letter-spacing:2px;margin-top:4px">${label}</div>
+    </div>`;
+  });
+  html += `</div><div style="font-size:9px;letter-spacing:3px;color:#444;margin-bottom:12px">HISTORY</div>`;
+  log.forEach(entry=>{
+    html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #111">
+      <div>
+        <div style="font-size:16px;font-weight:700">${entry.weight} <span style="font-size:10px;color:#444">lbs</span></div>
+        ${entry.notes?`<div style="font-size:10px;color:#444;margin-top:2px">${entry.notes}</div>`:''}
+      </div>
+      <div style="font-size:10px;color:#333">${fmtDate(entry.date)}</div>
+    </div>`;
+  });
+  document.getElementById('body-stats').innerHTML = html;
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+loadState();
+updateHeader();
+renderToday();
+renderBody();
+</script>
+</body>
+</html>
