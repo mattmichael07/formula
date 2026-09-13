@@ -1,4 +1,4 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -911,10 +911,15 @@ function rLifting(){
       const sk2=`${xi}-${si}`;const id=!!doneS[sk2];const val=setLogs[sk2]||'';const prev=prevWt(dayId,xi,si);
       h+=`<div class="set-row" id="sr-${sk2}" style="background:${id?day.hex+'0D':'transparent'}">
         <div class="set-num${id?' done':''}" id="sl-${sk2}">${si+1}</div>
-        <input type="number" class="set-inp" id="si-${sk2}" placeholder="${r!==null?r:'—'}" value="${val}" oninput="setLogs['${sk2}']=this.value;checkPRlive(${xi},'${day.color}')"/>
+        <div class="set-inp-wrap">
+          <input type="number" class="set-inp" id="si-${sk2}" placeholder="${r!==null?r:'—'}" value="${val}" oninput="setLogs['${sk2}']=this.value;checkPRlive(${xi},'${day.color}')"/>
+          ${prev?`<div class="set-prev-lbl">Last: ${prev}${u?' '+u:''}</div>`:''}
+        </div>
         ${u?`<span class="set-unit">${u}</span>`:''}
-        ${prev?`<span class="set-prev">${prev}</span>`:''}
-        <div class="set-chk${id?' done':''}" id="chk-${sk2}" onclick="tog('${sk2}','${day.hex}',${day.restSecs})">${id?'✓':''}</div>
+        <div class="set-actions">
+          ${val?`<button class="set-clear" onclick="clearSet('${sk2}',${xi},'${day.color}')" title="Clear">✕</button>`:''}
+          <div class="set-chk${id?' done':''}" id="chk-${sk2}" onclick="tog('${sk2}','${day.hex}',${day.restSecs})">${id?'✓':''}</div>
+        </div>
       </div>`;
     }
     h+=`</div></div>`;
@@ -949,6 +954,22 @@ function checkPRlive(xi,color){
   let badge=tags.querySelector('.pr-badge');
   if(mx>=pr&&mx>0){if(!badge){badge=document.createElement('span');badge.className='pr-badge';badge.textContent='PR 🏆';tags.appendChild(badge);}}
   else{if(badge)badge.remove();}
+}
+function clearSet(sk2,xi,color){
+  setLogs[sk2]='';
+  doneS[sk2]=false;
+  const inp=document.getElementById('si-'+sk2);
+  const chk=document.getElementById('chk-'+sk2);
+  const row=document.getElementById('sr-'+sk2);
+  const lbl=document.getElementById('sl-'+sk2);
+  if(inp){inp.value='';}
+  if(chk){chk.textContent='';chk.className='set-chk';}
+  if(row)row.style.background='transparent';
+  if(lbl)lbl.className='set-num';
+  checkPRlive(xi,color);
+  updBar();
+  // Re-render to remove clear button
+  rLifting();
 }
 function updBar(){
   const day=getAllDays().find(d=>d.id===dayId);if(!day)return;
